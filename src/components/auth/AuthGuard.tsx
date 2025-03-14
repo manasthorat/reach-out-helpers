@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
@@ -10,10 +9,13 @@ interface AuthGuardProps {
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { toast } = useToast();
   const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
+  
+  // Temporarily set isAuthenticated to true to bypass authentication
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(true);
 
   useEffect(() => {
-    // Check if user is authenticated (this is a mockup)
+    // This is temporarily disabled, but we'll keep the code for when you want to re-enable it
+    /* 
     const user = localStorage.getItem('user');
     setIsAuthenticated(!!user);
     
@@ -24,19 +26,16 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         variant: "destructive",
       });
     }
+    */
+    
+    // Show a toast notification that auth is bypassed
+    toast({
+      title: "Authentication bypassed",
+      description: "Authentication is temporarily disabled for development",
+    });
   }, [toast]);
 
-  // Show loading state while checking authentication
-  if (isAuthenticated === null) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  }
-
-  // If not authenticated, redirect to login page
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // If authenticated, render children
+  // Authentication is temporarily bypassed, so we always render children
   return <>{children}</>;
 };
 

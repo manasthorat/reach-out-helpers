@@ -43,15 +43,23 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const validatedData = loginSchema.parse(formData);
+      // Skip validation for development
+      // const validatedData = loginSchema.parse(formData);
       
-      // Simulate API call for login
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Simulate a brief loading state
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Set a dummy user in localStorage to simulate being logged in
+      localStorage.setItem('user', JSON.stringify({ 
+        id: '123', 
+        name: 'Development User', 
+        email: formData.email || 'dev@example.com' 
+      }));
       
       // Successfully logged in, show toast and redirect to dashboard
       toast({
         title: "Login successful!",
-        description: "Welcome back to ReachOut.",
+        description: "Authentication is temporarily bypassed for development.",
         duration: 3000,
       });
       
