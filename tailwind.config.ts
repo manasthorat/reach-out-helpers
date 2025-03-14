@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,19 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// ReachOut brand colors
+				reachout: {
+					blue: '#2563EB',
+					green: '#10B981',
+					purple: '#7C3AED',
+					darkblue: '#1E40AF',
+					lightgray: '#F3F4F6',
+					darkgray: '#374151',
+				},
+			},
+			fontFamily: {
+				sans: ['Inter var', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
