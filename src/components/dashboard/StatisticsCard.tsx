@@ -24,6 +24,11 @@ const StatisticsCard: React.FC<StatisticsCardProps> = ({
   trend,
   secondaryValue,
 }) => {
+  // Determine if the icon is a valid React element to safely access its props
+  const iconClassName = React.isValidElement(icon) && icon.props.className 
+    ? icon.props.className 
+    : 'bg-reachout-blue/10 text-reachout-blue';
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -32,7 +37,7 @@ const StatisticsCard: React.FC<StatisticsCardProps> = ({
       <CardContent>
         <div className="flex items-center justify-between">
           <div className="text-3xl font-bold text-reachout-darkgray">{value}</div>
-          <div className={`p-2 ${icon.props.className || 'bg-reachout-blue/10 text-reachout-blue'} rounded-full`}>
+          <div className={`p-2 ${iconClassName} rounded-full`}>
             {icon}
           </div>
         </div>
