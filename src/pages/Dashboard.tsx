@@ -9,6 +9,7 @@ import StatisticsSection from '@/components/dashboard/StatisticsSection';
 import EmailFilters from '@/components/dashboard/EmailFilters';
 import EmailTable from '@/components/dashboard/EmailTable';
 import { mockEmails, getStatusClass } from '@/data/mockEmailData';
+import { format } from 'date-fns';
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,9 +39,43 @@ const Dashboard = () => {
   };
 
   const totalEmails = mockEmails.length;
-  const totalOpened = mockEmails.filter(e => e.status === 'opened').length;
-  const totalReplied = mockEmails.filter(e => e.status === 'replied').length;
-  const responseRate = totalEmails > 0 ? Math.round((totalReplied / totalEmails) * 100) : 0;
+  
+  // Calculate emails sent today
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const totalEmailsToday = mockEmails.filter(e => {
+    const emailDate = new Date(e.date);
+    return emailDate >= today;
+  }).length;
+
+  // Generate data for the daily emails chart (last 7 days)
+  const getDailyEmailData = () => {
+    const data = [];
+    const now = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+      
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      const count = mockEmails.filter(e => {
+        const emailDate = new Date(e.date);
+        return emailDate >= date && emailDate < nextDay;
+      }).length;
+      
+      data.push({
+        name: format(date, 'MMM d'),
+        emails: count
+      });
+    }
+    
+    return data;
+  };
+
+  const dailyEmailData = getDailyEmailData();
 
   return (
     <Layout>
@@ -62,12 +97,11 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Section */}
         <StatisticsSection
           totalEmails={totalEmails}
-          totalOpened={totalOpened}
-          totalReplied={totalReplied}
-          responseRate={responseRate}
+          totalEmailsToday={totalEmailsToday}
+          dailyEmailData={dailyEmailData}
         />
 
         {/* Email History Section */}

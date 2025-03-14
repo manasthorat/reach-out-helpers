@@ -9,6 +9,13 @@ export interface Email {
   status: string;
 }
 
+// Helper function to get a date string for a specific number of days ago
+const getDateDaysAgo = (daysAgo: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString();
+};
+
 // Mock data for sent emails
 export const mockEmails: Email[] = [
   {
@@ -17,7 +24,7 @@ export const mockEmails: Email[] = [
     email: 'sarah.johnson@techrecruit.com',
     company: 'Tech Recruiters Inc.',
     subject: 'Experienced React Developer Seeking New Opportunities',
-    date: '2023-06-15T10:45:00',
+    date: getDateDaysAgo(0), // today
     status: 'opened',
   },
   {
@@ -26,7 +33,7 @@ export const mockEmails: Email[] = [
     email: 'michael.c@devtalent.io',
     company: 'DevTalent',
     subject: 'Senior Frontend Developer with 5+ Years Experience',
-    date: '2023-06-14T15:30:00',
+    date: getDateDaysAgo(0), // today
     status: 'replied',
   },
   {
@@ -35,7 +42,7 @@ export const mockEmails: Email[] = [
     email: 'j.roberts@techhires.com',
     company: 'TechHires',
     subject: 'Full Stack Developer Looking for Remote Opportunities',
-    date: '2023-06-13T09:15:00',
+    date: getDateDaysAgo(1),
     status: 'sent',
   },
   {
@@ -44,7 +51,7 @@ export const mockEmails: Email[] = [
     email: 'david@wilsonrecruiting.com',
     company: 'Wilson Recruiting',
     subject: 'Frontend Developer with React Expertise',
-    date: '2023-06-12T11:20:00',
+    date: getDateDaysAgo(2),
     status: 'opened',
   },
   {
@@ -53,7 +60,7 @@ export const mockEmails: Email[] = [
     email: 'amanda@talentsearch.com',
     company: 'Talent Search Partners',
     subject: 'React Developer Seeking New Challenges',
-    date: '2023-06-11T14:10:00',
+    date: getDateDaysAgo(3),
     status: 'replied',
   },
   {
@@ -62,7 +69,7 @@ export const mockEmails: Email[] = [
     email: 'r.johnson@techstaffing.com',
     company: 'Tech Staffing Solutions',
     subject: 'Web Developer with 4+ Years Experience',
-    date: '2023-06-10T09:00:00',
+    date: getDateDaysAgo(4),
     status: 'sent',
   },
   {
@@ -71,7 +78,7 @@ export const mockEmails: Email[] = [
     email: 'emily.davis@recruitpro.com',
     company: 'RecruitPro',
     subject: 'JavaScript Developer Seeking Senior Role',
-    date: '2023-06-09T16:45:00',
+    date: getDateDaysAgo(5),
     status: 'opened',
   },
   {
@@ -80,7 +87,7 @@ export const mockEmails: Email[] = [
     email: 'steve@millertalent.com',
     company: 'Miller Talent Agency',
     subject: 'React Native Developer Available for Immediate Start',
-    date: '2023-06-08T13:30:00',
+    date: getDateDaysAgo(6),
     status: 'sent',
   },
 ];

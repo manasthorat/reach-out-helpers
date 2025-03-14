@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   // This is a mockup for authentication - in a real app, you would use a proper auth system
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
@@ -25,6 +26,9 @@ const Header = () => {
     setIsAuthenticated(false);
     navigate('/');
   };
+
+  // Determine if current page is dashboard
+  const isDashboard = location.pathname === '/dashboard';
 
   return (
     <header className="bg-white shadow-sm py-4 sticky top-0 z-50">
@@ -51,6 +55,9 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
               Home
+            </Link>
+            <Link to="/dashboard" className={`transition-colors font-medium ${isDashboard ? 'text-reachout-blue' : 'text-reachout-darkgray hover:text-reachout-blue'}`}>
+              Dashboard
             </Link>
             <Link to="/features" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
               Features
@@ -105,6 +112,13 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link
+                to="/dashboard"
+                className={`transition-colors font-medium px-2 py-1 ${isDashboard ? 'text-reachout-blue' : 'text-reachout-darkgray hover:text-reachout-blue'}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Dashboard
               </Link>
               <Link
                 to="/features"
