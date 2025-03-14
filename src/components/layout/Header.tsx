@@ -1,14 +1,29 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
+  // This is a mockup for authentication - in a real app, you would use a proper auth system
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check if user is logged in (this is a mockup)
+    const user = localStorage.getItem('user');
+    setIsAuthenticated(!!user);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    navigate('/');
   };
 
   return (
@@ -40,8 +55,8 @@ const Header = () => {
             <Link to="/features" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
               Features
             </Link>
-            <Link to="/pricing" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
-              Pricing
+            <Link to="/how-it-works" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
+              How It Works
             </Link>
             <Link to="/faq" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
               FAQ
@@ -49,14 +64,29 @@ const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="outline" className="border-reachout-blue text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
-                Log In
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button className="bg-reachout-blue hover:bg-reachout-darkblue">Get Started</Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard">
+                  <Button variant="outline" className="border-reachout-blue text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button onClick={handleLogout} className="bg-reachout-darkgray hover:bg-reachout-darkgray/80">
+                  Log Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" className="border-reachout-blue text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button className="bg-reachout-blue hover:bg-reachout-darkblue">Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -84,11 +114,11 @@ const Header = () => {
                 Features
               </Link>
               <Link
-                to="/pricing"
+                to="/how-it-works"
                 className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium px-2 py-1"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Pricing
+                How It Works
               </Link>
               <Link
                 to="/faq"
@@ -98,14 +128,29 @@ const Header = () => {
                 FAQ
               </Link>
               <div className="flex flex-col gap-2 mt-2">
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full border-reachout-blue text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
-                    Log In
-                  </Button>
-                </Link>
-                <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full bg-reachout-blue hover:bg-reachout-darkblue">Get Started</Button>
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full border-reachout-blue text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="w-full bg-reachout-darkgray hover:bg-reachout-darkgray/80">
+                      Log Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full border-reachout-blue text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
+                        Log In
+                      </Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full bg-reachout-blue hover:bg-reachout-darkblue">Get Started</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>

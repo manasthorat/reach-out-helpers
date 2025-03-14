@@ -10,6 +10,9 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import ProfessionalProfile from "./pages/onboarding/ProfessionalProfile";
 import NotFound from "./pages/NotFound";
+import AuthGuard from "./components/auth/AuthGuard";
+import HowItWorks from "./pages/HowItWorks";
+import ProfileSettings from "./pages/ProfileSettings";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +26,23 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <AuthGuard>
+                <Dashboard />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/profile-settings" 
+            element={
+              <AuthGuard>
+                <ProfileSettings />
+              </AuthGuard>
+            } 
+          />
           <Route path="/onboarding/profile" element={<ProfessionalProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

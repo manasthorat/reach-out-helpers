@@ -1,12 +1,149 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Users, Target, TrendingUp, ChevronRight, Plus, Edit, BarChart } from 'lucide-react';
+import { Mail, Users, Target, TrendingUp, ChevronRight, Plus, Edit, BarChart, Calendar, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+
+// Mock data for sent emails
+const mockEmails = [
+  {
+    id: 1,
+    recipient: 'Sarah Johnson',
+    email: 'sarah.johnson@techrecruit.com',
+    company: 'Tech Recruiters Inc.',
+    subject: 'Experienced React Developer Seeking New Opportunities',
+    date: '2023-06-15T10:45:00',
+    status: 'opened',
+  },
+  {
+    id: 2,
+    recipient: 'Michael Chen',
+    email: 'michael.c@devtalent.io',
+    company: 'DevTalent',
+    subject: 'Senior Frontend Developer with 5+ Years Experience',
+    date: '2023-06-14T15:30:00',
+    status: 'replied',
+  },
+  {
+    id: 3,
+    recipient: 'Jessica Roberts',
+    email: 'j.roberts@techhires.com',
+    company: 'TechHires',
+    subject: 'Full Stack Developer Looking for Remote Opportunities',
+    date: '2023-06-13T09:15:00',
+    status: 'sent',
+  },
+  {
+    id: 4,
+    recipient: 'David Wilson',
+    email: 'david@wilsonrecruiting.com',
+    company: 'Wilson Recruiting',
+    subject: 'Frontend Developer with React Expertise',
+    date: '2023-06-12T11:20:00',
+    status: 'opened',
+  },
+  {
+    id: 5,
+    recipient: 'Amanda Lee',
+    email: 'amanda@talentsearch.com',
+    company: 'Talent Search Partners',
+    subject: 'React Developer Seeking New Challenges',
+    date: '2023-06-11T14:10:00',
+    status: 'replied',
+  },
+  {
+    id: 6,
+    recipient: 'Robert Johnson',
+    email: 'r.johnson@techstaffing.com',
+    company: 'Tech Staffing Solutions',
+    subject: 'Web Developer with 4+ Years Experience',
+    date: '2023-06-10T09:00:00',
+    status: 'sent',
+  },
+  {
+    id: 7,
+    recipient: 'Emily Davis',
+    email: 'emily.davis@recruitpro.com',
+    company: 'RecruitPro',
+    subject: 'JavaScript Developer Seeking Senior Role',
+    date: '2023-06-09T16:45:00',
+    status: 'opened',
+  },
+  {
+    id: 8,
+    recipient: 'Steve Miller',
+    email: 'steve@millertalent.com',
+    company: 'Miller Talent Agency',
+    subject: 'React Native Developer Available for Immediate Start',
+    date: '2023-06-08T13:30:00',
+    status: 'sent',
+  },
+];
 
 const Dashboard = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  // Filter emails based on search query, date range, and status
+  const filteredEmails = mockEmails.filter((email) => {
+    const matchesSearch = email.recipient.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         email.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         email.subject.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const emailDate = new Date(email.date);
+    const matchesDateFrom = !dateFrom || emailDate >= dateFrom;
+    const matchesDateTo = !dateTo || emailDate <= dateTo;
+    const matchesStatus = !statusFilter || email.status === statusFilter;
+    
+    return matchesSearch && matchesDateFrom && matchesDateTo && matchesStatus;
+  });
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    setStatusFilter(null);
+  };
+
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'replied':
+        return 'bg-green-100 text-green-800';
+      case 'opened':
+        return 'bg-blue-100 text-blue-800';
+      case 'sent':
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const totalEmails = mockEmails.length;
+  const totalOpened = mockEmails.filter(e => e.status === 'opened').length;
+  const totalReplied = mockEmails.filter(e => e.status === 'replied').length;
+  const responseRate = totalEmails > 0 ? Math.round((totalReplied / totalEmails) * 100) : 0;
+
   return (
     <Layout>
       <div className="container-custom py-8">
@@ -16,11 +153,13 @@ const Dashboard = () => {
             <p className="text-reachout-darkgray/70">Welcome back, John Doe</p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-3">
+            <Link to="/profile-settings">
+              <Button variant="outline" className="border-reachout-blue text-reachout-blue hover:bg-reachout-blue/10 flex items-center gap-2">
+                <Edit size={16} /> Update Profile
+              </Button>
+            </Link>
             <Button className="bg-reachout-blue hover:bg-reachout-darkblue flex items-center gap-2">
               <Plus size={16} /> New Campaign
-            </Button>
-            <Button variant="outline" className="border-reachout-blue text-reachout-blue hover:bg-reachout-blue/10 flex items-center gap-2">
-              <Edit size={16} /> Create Template
             </Button>
           </div>
         </div>
@@ -33,7 +172,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-reachout-darkgray">124</div>
+                <div className="text-3xl font-bold text-reachout-darkgray">{totalEmails}</div>
                 <div className="p-2 bg-reachout-blue/10 text-reachout-blue rounded-full">
                   <Mail size={20} />
                 </div>
@@ -50,7 +189,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-reachout-darkgray">32%</div>
+                <div className="text-3xl font-bold text-reachout-darkgray">{responseRate}%</div>
                 <div className="p-2 bg-reachout-green/10 text-reachout-green rounded-full">
                   <BarChart size={20} />
                 </div>
@@ -63,144 +202,183 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg text-reachout-darkgray/80 font-medium">Active Campaigns</CardTitle>
+              <CardTitle className="text-lg text-reachout-darkgray/80 font-medium">Emails Opened</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-reachout-darkgray">3</div>
+                <div className="text-3xl font-bold text-reachout-darkgray">{totalOpened}</div>
                 <div className="p-2 bg-reachout-purple/10 text-reachout-purple rounded-full">
                   <Target size={20} />
                 </div>
               </div>
               <div className="text-sm text-reachout-purple mt-2">
-                2 scheduled for this week
+                {Math.round((totalOpened / totalEmails) * 100)}% open rate
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg text-reachout-darkgray/80 font-medium">Recruiter Contacts</CardTitle>
+              <CardTitle className="text-lg text-reachout-darkgray/80 font-medium">Replies Received</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-reachout-darkgray">78</div>
+                <div className="text-3xl font-bold text-reachout-darkgray">{totalReplied}</div>
                 <div className="p-2 bg-reachout-blue/10 text-reachout-blue rounded-full">
                   <Users size={20} />
                 </div>
               </div>
               <div className="text-sm text-reachout-blue mt-2">
-                In your network
+                {Math.round((totalReplied / totalEmails) * 100)}% reply rate
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Recent Activity and Tips */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Your latest outreach activities</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { 
-                      date: "Today, 10:45 AM", 
-                      title: "Email sent to Sarah Johnson", 
-                      description: "Using 'Senior Developer Introduction' template", 
-                      icon: <Mail size={16} className="text-reachout-blue" /> 
-                    },
-                    { 
-                      date: "Yesterday, 3:22 PM", 
-                      title: "Email sent to Michael Chen", 
-                      description: "Using 'Finance Professional Introduction' template", 
-                      icon: <Mail size={16} className="text-reachout-blue" /> 
-                    },
-                    { 
-                      date: "Yesterday, 2:15 PM", 
-                      title: "New campaign created", 
-                      description: "Tech Recruiter Outreach - 15 recipients", 
-                      icon: <Target size={16} className="text-reachout-purple" /> 
-                    },
-                    { 
-                      date: "Mar 15, 5:30 PM", 
-                      title: "Template updated", 
-                      description: "Edited 'IT Project Manager Introduction'", 
-                      icon: <Edit size={16} className="text-reachout-green" /> 
-                    },
-                    { 
-                      date: "Mar 15, 1:45 PM", 
-                      title: "Email sent to Jessica Roberts", 
-                      description: "Using 'IT Services Introduction' template", 
-                      icon: <Mail size={16} className="text-reachout-blue" /> 
-                    },
-                  ].map((activity, index) => (
-                    <div key={index} className="flex items-start p-3 rounded-md hover:bg-gray-50">
-                      <div className="mr-4 mt-1">
-                        {activity.icon}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-medium text-reachout-darkgray">{activity.title}</h4>
-                          <span className="text-xs text-reachout-darkgray/60">{activity.date}</span>
-                        </div>
-                        <p className="text-sm text-reachout-darkgray/70">{activity.description}</p>
-                      </div>
-                    </div>
-                  ))}
+        {/* Email History Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Email History</CardTitle>
+            <CardDescription>View and filter all your sent emails</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Search by recipient, company or subject..."
+                    className="pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
-                <div className="mt-4 text-center">
-                  <Button variant="ghost" className="text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
-                    View All Activity <ChevronRight size={16} className="ml-1" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Tips & Guidance</CardTitle>
-                <CardDescription>Improve your outreach effectiveness</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <h4 className="font-medium text-reachout-blue mb-2">Personalize Your Subject Line</h4>
-                    <p className="text-sm text-reachout-darkgray/80">
-                      Emails with personalized subject lines have 26% higher open rates. Include the company name or a specific role reference.
-                    </p>
-                  </div>
-                  
-                  <div className="p-4 bg-green-50 rounded-lg border border-green-100">
-                    <h4 className="font-medium text-green-700 mb-2">Follow Up After 3-5 Days</h4>
-                    <p className="text-sm text-reachout-darkgray/80">
-                      70% of responses come from follow-up emails. Schedule a polite follow-up if you don't hear back.
-                    </p>
-                  </div>
-                  
-                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
-                    <h4 className="font-medium text-reachout-purple mb-2">Keep Emails Concise</h4>
-                    <p className="text-sm text-reachout-darkgray/80">
-                      Recruiters spend just 6 seconds scanning an email. Keep your message under 150 words for best results.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <Link to="/resources">
-                    <Button variant="ghost" className="w-full text-reachout-blue hover:text-reachout-blue hover:bg-reachout-blue/10">
-                      View All Tips <ChevronRight size={16} className="ml-1" />
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {/* Date From Selector */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] justify-start text-left font-normal",
+                        !dateFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {dateFrom ? format(dateFrom, "MMM d, yyyy") : "From Date"}
                     </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {/* Date To Selector */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] justify-start text-left font-normal",
+                        !dateTo && "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {dateTo ? format(dateTo, "MMM d, yyyy") : "To Date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {/* Status Filter */}
+                <select
+                  className="h-10 w-[140px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={statusFilter || ''}
+                  onChange={(e) => setStatusFilter(e.target.value || null)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="sent">Sent</option>
+                  <option value="opened">Opened</option>
+                  <option value="replied">Replied</option>
+                </select>
+
+                <Button variant="ghost" onClick={clearFilters} className="h-10">
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+
+            {/* Email Table */}
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Recipient</TableHead>
+                    <TableHead className="hidden md:table-cell">Company</TableHead>
+                    <TableHead className="hidden md:table-cell">Subject</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEmails.length > 0 ? (
+                    filteredEmails.map((email) => (
+                      <TableRow key={email.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{email.recipient}</div>
+                            <div className="text-sm text-gray-500">{email.email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{email.company}</TableCell>
+                        <TableCell className="hidden md:table-cell max-w-[200px] truncate">
+                          {email.subject}
+                        </TableCell>
+                        <TableCell>{format(new Date(email.date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(email.status)}`}>
+                            {email.status.charAt(0).toUpperCase() + email.status.slice(1)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                        No emails found matching your search criteria.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-sm text-gray-500">
+                Showing {filteredEmails.length} of {mockEmails.length} emails
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled>Previous</Button>
+                <Button variant="outline" size="sm" disabled>Next</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
