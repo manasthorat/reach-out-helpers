@@ -19,6 +19,8 @@ interface Email {
   subject: string;
   date: string;
   status: string;
+  location?: string;
+  jobTitle?: string;
 }
 
 interface EmailTableProps {
@@ -39,10 +41,10 @@ const EmailTable: React.FC<EmailTableProps> = ({
           <TableHeader>
             <TableRow>
               <TableHead>Recipient</TableHead>
-              <TableHead className="hidden md:table-cell">Company</TableHead>
+              <TableHead className="hidden md:table-cell">Job Title</TableHead>
               <TableHead className="hidden md:table-cell">Subject</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="hidden md:table-cell">Location</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,16 +57,12 @@ const EmailTable: React.FC<EmailTableProps> = ({
                       <div className="text-sm text-gray-500">{email.email}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{email.company}</TableCell>
+                  <TableCell className="hidden md:table-cell">{email.jobTitle || 'Not specified'}</TableCell>
                   <TableCell className="hidden md:table-cell max-w-[200px] truncate">
                     {email.subject}
                   </TableCell>
                   <TableCell>{format(new Date(email.date), 'MMM d, yyyy')}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(email.status)}`}>
-                      {email.status.charAt(0).toUpperCase() + email.status.slice(1)}
-                    </span>
-                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{email.location || 'Not specified'}</TableCell>
                 </TableRow>
               ))
             ) : (

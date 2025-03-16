@@ -14,6 +14,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
+import { FileUp, X, File } from 'lucide-react';
 
 const ProfileSettings = () => {
   const { toast } = useToast();
@@ -30,6 +31,8 @@ const ProfileSettings = () => {
     about: 'Experienced software engineer with expertise in React, Node.js, and cloud technologies.',
     skills: 'JavaScript, TypeScript, React, Node.js, AWS, Docker'
   });
+  
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -40,12 +43,33 @@ const ProfileSettings = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      // Check if file is PDF or DOCX
+      if (file.type === 'application/pdf' || 
+          file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        setResumeFile(file);
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a PDF or DOCX file",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const handleRemoveResume = () => {
+    setResumeFile(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Updated profile data:', formData);
+    console.log('Resume file:', resumeFile);
     
     // In a real app, you would send this data to your backend
-    // For now, we'll just show a success message
     toast({
       title: "Profile updated",
       description: "Your profile has been successfully updated.",
@@ -183,6 +207,54 @@ const ProfileSettings = () => {
                           <SelectItem value="3 months">3 months</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+                  
+                  {/* Resume Upload Section */}
+                  <div className="space-y-2">
+                    <Label htmlFor="resume">Resume/CV</Label>
+                    <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50">
+                      {resumeFile ? (
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center">
+                            <File className="h-8 w-8 text-reachout-blue mr-2" />
+                            <div>
+                              <p className="font-medium">{resumeFile.name}</p>
+                              <p className="text-sm text-gray-500">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={handleRemoveResume}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <FileUp className="h-12 w-12 text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500 mb-2">Drag and drop your resume here, or</p>
+                          <div className="relative">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              className="border-reachout-blue text-reachout-blue hover:bg-reachout-blue/10"
+                            >
+                              Browse Files
+                            </Button>
+                            <input
+                              id="resume"
+                              type="file"
+                              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                              onChange={handleResumeUpload}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">PDF or DOCX, up to 5MB</p>
+                        </>
+                      )}
                     </div>
                   </div>
                   

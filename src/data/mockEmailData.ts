@@ -7,6 +7,8 @@ export interface Email {
   subject: string;
   date: string;
   status: string;
+  location: string;
+  jobTitle: string;
 }
 
 // Helper function to get a date string for a specific number of days ago
@@ -26,6 +28,8 @@ export const mockEmails: Email[] = [
     subject: 'Experienced React Developer Seeking New Opportunities',
     date: getDateDaysAgo(0), // today
     status: 'opened',
+    location: 'New York, NY',
+    jobTitle: 'Senior Technical Recruiter'
   },
   {
     id: 2,
@@ -35,6 +39,8 @@ export const mockEmails: Email[] = [
     subject: 'Senior Frontend Developer with 5+ Years Experience',
     date: getDateDaysAgo(0), // today
     status: 'replied',
+    location: 'San Francisco, CA',
+    jobTitle: 'Talent Acquisition Manager'
   },
   {
     id: 3,
@@ -44,6 +50,8 @@ export const mockEmails: Email[] = [
     subject: 'Full Stack Developer Looking for Remote Opportunities',
     date: getDateDaysAgo(1),
     status: 'sent',
+    location: 'Remote',
+    jobTitle: 'Technical Recruiter'
   },
   {
     id: 4,
@@ -53,6 +61,8 @@ export const mockEmails: Email[] = [
     subject: 'Frontend Developer with React Expertise',
     date: getDateDaysAgo(2),
     status: 'opened',
+    location: 'Boston, MA',
+    jobTitle: 'Head of Engineering Recruitment'
   },
   {
     id: 5,
@@ -62,6 +72,8 @@ export const mockEmails: Email[] = [
     subject: 'React Developer Seeking New Challenges',
     date: getDateDaysAgo(3),
     status: 'replied',
+    location: 'Austin, TX',
+    jobTitle: 'IT Recruiter'
   },
   {
     id: 6,
@@ -71,6 +83,8 @@ export const mockEmails: Email[] = [
     subject: 'Web Developer with 4+ Years Experience',
     date: getDateDaysAgo(4),
     status: 'sent',
+    location: 'Chicago, IL',
+    jobTitle: 'Recruiting Specialist'
   },
   {
     id: 7,
@@ -80,6 +94,8 @@ export const mockEmails: Email[] = [
     subject: 'JavaScript Developer Seeking Senior Role',
     date: getDateDaysAgo(5),
     status: 'opened',
+    location: 'Seattle, WA',
+    jobTitle: 'Senior Technical Recruiter'
   },
   {
     id: 8,
@@ -89,6 +105,8 @@ export const mockEmails: Email[] = [
     subject: 'React Native Developer Available for Immediate Start',
     date: getDateDaysAgo(6),
     status: 'sent',
+    location: 'Denver, CO',
+    jobTitle: 'Tech Talent Specialist'
   },
 ];
 
