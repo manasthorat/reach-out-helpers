@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Templates from "./pages/Templates";
 import ProfessionalProfile from "./pages/onboarding/ProfessionalProfile";
 import NotFound from "./pages/NotFound";
 import AuthGuard from "./components/auth/AuthGuard";
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/templates" element={<Templates />} />
           <Route 
             path="/dashboard" 
             element={

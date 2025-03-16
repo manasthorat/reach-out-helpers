@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -23,6 +24,11 @@ interface Campaign {
   status: 'active' | 'paused' | 'draft';
   emailsSent: number;
   totalEmails: number;
+  subject?: string;
+  body?: string;
+  dailyLimit?: number;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 const onboardingSteps = [
@@ -64,7 +70,12 @@ const initialCampaigns: Campaign[] = [
     createdAt: new Date(2023, 6, 15),
     status: 'active',
     emailsSent: 24,
-    totalEmails: 50
+    totalEmails: 50,
+    subject: "Senior Developer Position - Experienced Full Stack Engineer",
+    body: "Dear Hiring Manager,\n\nI'm writing to express my interest in the Senior Developer position at your company...",
+    dailyLimit: 5,
+    startDate: new Date(2023, 6, 15),
+    endDate: new Date(2023, 8, 15)
   },
   {
     id: 2,
@@ -73,7 +84,12 @@ const initialCampaigns: Campaign[] = [
     createdAt: new Date(2023, 7, 3),
     status: 'paused',
     emailsSent: 12,
-    totalEmails: 40
+    totalEmails: 40,
+    subject: "Remote Senior Developer - 8+ Years of Experience",
+    body: "Hello,\n\nI'm an experienced developer looking for remote opportunities...",
+    dailyLimit: 4,
+    startDate: new Date(2023, 7, 3),
+    endDate: new Date(2023, 9, 3)
   }
 ];
 
@@ -86,15 +102,55 @@ const Dashboard = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
   const [isNewCampaignOpen, setIsNewCampaignOpen] = useState(false);
   const [campaignBeingEdited, setCampaignBeingEdited] = useState<Campaign | null>(null);
+  const [steps, setSteps] = useState(onboardingSteps);
+  const [hideOnboarding, setHideOnboarding] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
     name: '',
     description: '',
-    totalEmails: 0
+    totalEmails: 0,
+    subject: '',
+    body: '',
+    dailyLimit: 5,
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM-dd')
   });
+
+  // Check if we need to open campaign with template
+  useEffect(() => {
+    const shouldOpenWithTemplate = localStorage.getItem('openCampaignWithTemplate');
+    if (shouldOpenWithTemplate === 'true') {
+      const templateData = localStorage.getItem('campaignTemplate');
+      if (templateData) {
+        try {
+          const template = JSON.parse(templateData);
+          setNewCampaign({
+            ...newCampaign,
+            name: `Campaign based on ${template.name}`,
+            description: template.description,
+            subject: template.subject,
+            body: template.body
+          });
+          setIsNewCampaignOpen(true);
+          // Clear the flags
+          localStorage.removeItem('openCampaignWithTemplate');
+          localStorage.removeItem('campaignTemplate');
+        } catch (e) {
+          console.error("Error parsing template data", e);
+        }
+      }
+    }
+  }, []);
+
+  // Check if all steps are completed and hide onboarding if they are
+  useEffect(() => {
+    const allCompleted = steps.every(step => step.completed);
+    if (allCompleted) {
+      setHideOnboarding(true);
+    }
+  }, [steps]);
 
   const filteredEmails = mockEmails.filter((email) => {
     const matchesSearch = email.recipient.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         email.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          email.subject.toLowerCase().includes(searchQuery.toLowerCase());
     
     const emailDate = new Date(email.date);
@@ -150,10 +206,10 @@ const Dashboard = () => {
   const dailyEmailData = getDailyEmailData();
 
   const handleAddCampaign = () => {
-    if (!newCampaign.name.trim()) {
+    if (!newCampaign.name.trim() || !newCampaign.subject.trim() || !newCampaign.body.trim()) {
       toast({
         title: "Error",
-        description: "Campaign name is required",
+        description: "Campaign name, subject, and body are required",
         variant: "destructive"
       });
       return;
@@ -162,7 +218,16 @@ const Dashboard = () => {
     if (campaignBeingEdited) {
       setCampaigns(campaigns.map(c => 
         c.id === campaignBeingEdited.id 
-          ? {...c, name: newCampaign.name, description: newCampaign.description} 
+          ? {
+              ...c, 
+              name: newCampaign.name, 
+              description: newCampaign.description,
+              subject: newCampaign.subject,
+              body: newCampaign.body,
+              dailyLimit: parseInt(newCampaign.dailyLimit.toString()),
+              startDate: new Date(newCampaign.startDate),
+              endDate: new Date(newCampaign.endDate)
+            } 
           : c
       ));
       toast({
@@ -178,15 +243,35 @@ const Dashboard = () => {
         createdAt: new Date(),
         status: 'draft',
         emailsSent: 0,
-        totalEmails: newCampaign.totalEmails || 30
+        totalEmails: newCampaign.totalEmails || 30,
+        subject: newCampaign.subject,
+        body: newCampaign.body,
+        dailyLimit: parseInt(newCampaign.dailyLimit.toString()),
+        startDate: new Date(newCampaign.startDate),
+        endDate: new Date(newCampaign.endDate)
       }]);
+
+      // Update the create campaign step as completed
+      setSteps(steps.map(step => 
+        step.id === 3 ? {...step, completed: true} : step
+      ));
+
       toast({
         title: "Success",
         description: "New campaign created"
       });
     }
 
-    setNewCampaign({ name: '', description: '', totalEmails: 0 });
+    setNewCampaign({
+      name: '',
+      description: '',
+      totalEmails: 0,
+      subject: '',
+      body: '',
+      dailyLimit: 5,
+      startDate: format(new Date(), 'yyyy-MM-dd'),
+      endDate: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM-dd')
+    });
     setCampaignBeingEdited(null);
     setIsNewCampaignOpen(false);
   };
@@ -196,7 +281,12 @@ const Dashboard = () => {
     setNewCampaign({
       name: campaign.name,
       description: campaign.description,
-      totalEmails: campaign.totalEmails
+      totalEmails: campaign.totalEmails,
+      subject: campaign.subject || '',
+      body: campaign.body || '',
+      dailyLimit: campaign.dailyLimit || 5,
+      startDate: format(campaign.startDate || new Date(), 'yyyy-MM-dd'),
+      endDate: format(campaign.endDate || new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM-dd')
     });
     setIsNewCampaignOpen(true);
   };
@@ -213,6 +303,14 @@ const Dashboard = () => {
     setCampaigns(campaigns.map(c => {
       if (c.id === id) {
         const newStatus = c.status === 'active' ? 'paused' : 'active';
+        
+        // If activating first campaign, mark the last onboarding step as complete
+        if (newStatus === 'active') {
+          setSteps(steps.map(step => 
+            step.id === 4 ? {...step, completed: true} : step
+          ));
+        }
+        
         return {...c, status: newStatus};
       }
       return c;
@@ -227,8 +325,8 @@ const Dashboard = () => {
     }
   };
 
-  const completedSteps = onboardingSteps.filter(step => step.completed).length;
-  const progressPercentage = (completedSteps / onboardingSteps.length) * 100;
+  const completedSteps = steps.filter(step => step.completed).length;
+  const progressPercentage = (completedSteps / steps.length) * 100;
 
   return (
     <Layout>
@@ -250,7 +348,7 @@ const Dashboard = () => {
                   <Plus size={16} /> New Campaign
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-3xl">
                 <DialogHeader>
                   <DialogTitle>{campaignBeingEdited ? 'Edit Campaign' : 'Create New Campaign'}</DialogTitle>
                   <DialogDescription>
@@ -259,27 +357,18 @@ const Dashboard = () => {
                       : 'Fill in the details to create a new outreach campaign'}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="campaign-name">Campaign Name</Label>
-                    <Input 
-                      id="campaign-name" 
-                      value={newCampaign.name} 
-                      onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})}
-                      placeholder="e.g., Tech Startups in NYC" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="campaign-description">Description</Label>
-                    <Textarea 
-                      id="campaign-description" 
-                      value={newCampaign.description} 
-                      onChange={(e) => setNewCampaign({...newCampaign, description: e.target.value})}
-                      placeholder="Describe your campaign target and goals" 
-                      rows={3}
-                    />
-                  </div>
-                  {!campaignBeingEdited && (
+                <div className="space-y-4 py-4 max-h-[80vh] overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="campaign-name">Campaign Name</Label>
+                      <Input 
+                        id="campaign-name" 
+                        value={newCampaign.name} 
+                        onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})}
+                        placeholder="e.g., Tech Startups in NYC" 
+                      />
+                    </div>
+                    
                     <div className="space-y-2">
                       <Label htmlFor="total-emails">Total Emails to Send</Label>
                       <Input 
@@ -290,13 +379,92 @@ const Dashboard = () => {
                         placeholder="e.g., 50" 
                       />
                     </div>
-                  )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="daily-limit">Daily Email Limit</Label>
+                      <Input 
+                        id="daily-limit" 
+                        type="number" 
+                        value={newCampaign.dailyLimit || ''} 
+                        onChange={(e) => setNewCampaign({...newCampaign, dailyLimit: parseInt(e.target.value) || 0})}
+                        placeholder="e.g., 5" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="start-date">Start Date</Label>
+                      <Input 
+                        id="start-date" 
+                        type="date" 
+                        value={newCampaign.startDate} 
+                        onChange={(e) => setNewCampaign({...newCampaign, startDate: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="end-date">End Date</Label>
+                      <Input 
+                        id="end-date" 
+                        type="date" 
+                        value={newCampaign.endDate} 
+                        onChange={(e) => setNewCampaign({...newCampaign, endDate: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="campaign-description">Campaign Description</Label>
+                    <Textarea 
+                      id="campaign-description" 
+                      value={newCampaign.description} 
+                      onChange={(e) => setNewCampaign({...newCampaign, description: e.target.value})}
+                      placeholder="Describe your campaign target and goals" 
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email-subject">Email Subject</Label>
+                    <Input 
+                      id="email-subject" 
+                      value={newCampaign.subject} 
+                      onChange={(e) => setNewCampaign({...newCampaign, subject: e.target.value})}
+                      placeholder="e.g., Senior Developer Position - Experienced Full Stack Engineer" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email-body">Email Body</Label>
+                    <Textarea 
+                      id="email-body" 
+                      value={newCampaign.body} 
+                      onChange={(e) => setNewCampaign({...newCampaign, body: e.target.value})}
+                      placeholder="Write your email content here..." 
+                      rows={10}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    <p>Use placeholders like [Position], [Company Name], etc. to personalize your emails.</p>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => {
                     setIsNewCampaignOpen(false);
                     setCampaignBeingEdited(null);
-                    setNewCampaign({ name: '', description: '', totalEmails: 0 });
+                    setNewCampaign({
+                      name: '',
+                      description: '',
+                      totalEmails: 0,
+                      subject: '',
+                      body: '',
+                      dailyLimit: 5,
+                      startDate: format(new Date(), 'yyyy-MM-dd'),
+                      endDate: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM-dd')
+                    });
                   }}>
                     Cancel
                   </Button>
@@ -309,52 +477,54 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <Card className="mb-8 border-reachout-blue/20">
-          <CardHeader className="pb-4">
-            <CardTitle>Get Started with ReachOut</CardTitle>
-            <CardDescription>Complete these 4 steps to start reaching out to potential employers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-200">
-              <div 
-                className="h-full bg-reachout-blue transition-all" 
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {onboardingSteps.map((step) => (
-                <Card key={step.id} className={`border ${step.completed ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-                  <CardHeader className="pb-2 pt-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-reachout-blue/10 text-reachout-blue">
-                        {step.completed ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : step.id}
+        {!hideOnboarding && (
+          <Card className="mb-8 border-reachout-blue/20">
+            <CardHeader className="pb-4">
+              <CardTitle>Get Started with ReachOut</CardTitle>
+              <CardDescription>Complete these 4 steps to start reaching out to potential employers</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div 
+                  className="h-full bg-reachout-blue transition-all" 
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {steps.map((step) => (
+                  <Card key={step.id} className={`border ${step.completed ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+                    <CardHeader className="pb-2 pt-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-reachout-blue/10 text-reachout-blue">
+                          {step.completed ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : step.id}
+                        </div>
+                        <span className="text-xs font-medium text-gray-500">Step {step.id}/4</span>
                       </div>
-                      <span className="text-xs font-medium text-gray-500">Step {step.id}/4</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <h3 className="font-semibold">{step.title}</h3>
-                    <p className="text-sm text-gray-500">{step.description}</p>
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    <Link 
-                      to={step.link}
-                      className={`text-sm font-medium ${step.completed ? 'text-green-600' : 'text-reachout-blue'} hover:underline`}
-                      onClick={(e) => {
-                        if (step.link === '#new-campaign') {
-                          e.preventDefault();
-                          setIsNewCampaignOpen(true);
-                        }
-                      }}
-                    >
-                      {step.completed ? 'Completed' : 'Get Started'} <ChevronRight className="ml-1 inline-block h-4 w-4" />
-                    </Link>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <h3 className="font-semibold">{step.title}</h3>
+                      <p className="text-sm text-gray-500">{step.description}</p>
+                    </CardContent>
+                    <CardFooter className="pt-0">
+                      <Link 
+                        to={step.link}
+                        className={`text-sm font-medium ${step.completed ? 'text-green-600' : 'text-reachout-blue'} hover:underline`}
+                        onClick={(e) => {
+                          if (step.link === '#new-campaign') {
+                            e.preventDefault();
+                            setIsNewCampaignOpen(true);
+                          }
+                        }}
+                      >
+                        {step.completed ? 'Completed' : 'Get Started'} <ChevronRight className="ml-1 inline-block h-4 w-4" />
+                      </Link>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <StatisticsSection
           totalEmails={totalEmails}
@@ -368,16 +538,35 @@ const Dashboard = () => {
               <CardTitle>Campaigns</CardTitle>
               <CardDescription>Manage your outreach campaigns</CardDescription>
             </div>
-            <Button 
-              onClick={() => {
-                setIsNewCampaignOpen(true);
-                setCampaignBeingEdited(null);
-                setNewCampaign({ name: '', description: '', totalEmails: 0 });
-              }}
-              className="bg-reachout-blue hover:bg-reachout-darkblue"
-            >
-              <Plus size={16} className="mr-2" /> New Campaign
-            </Button>
+            <div className="flex gap-2">
+              <Link to="/templates">
+                <Button 
+                  variant="outline"
+                  className="border-reachout-blue text-reachout-blue hover:bg-reachout-blue/10"
+                >
+                  Browse Templates
+                </Button>
+              </Link>
+              <Button 
+                onClick={() => {
+                  setIsNewCampaignOpen(true);
+                  setCampaignBeingEdited(null);
+                  setNewCampaign({
+                    name: '',
+                    description: '',
+                    totalEmails: 0,
+                    subject: '',
+                    body: '',
+                    dailyLimit: 5,
+                    startDate: format(new Date(), 'yyyy-MM-dd'),
+                    endDate: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM-dd')
+                  });
+                }}
+                className="bg-reachout-blue hover:bg-reachout-darkblue"
+              >
+                <Plus size={16} className="mr-2" /> New Campaign
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {campaigns.length > 0 ? (
@@ -400,6 +589,10 @@ const Dashboard = () => {
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
                           <span>Created: {format(campaign.createdAt, 'MMM d, yyyy')}</span>
                           <span>Progress: {campaign.emailsSent}/{campaign.totalEmails} emails sent</span>
+                          {campaign.dailyLimit && <span>Daily limit: {campaign.dailyLimit} emails</span>}
+                          {campaign.startDate && campaign.endDate && (
+                            <span>Schedule: {format(campaign.startDate, 'MMM d')} - {format(campaign.endDate, 'MMM d, yyyy')}</span>
+                          )}
                         </div>
                         <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
                           <div 

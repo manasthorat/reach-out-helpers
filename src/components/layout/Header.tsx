@@ -29,6 +29,7 @@ const Header = () => {
 
   // Determine if current page is dashboard
   const isDashboard = location.pathname === '/dashboard';
+  const isTemplates = location.pathname === '/templates';
 
   return (
     <header className="bg-white shadow-sm py-4 sticky top-0 z-50">
@@ -59,8 +60,8 @@ const Header = () => {
             <Link to="/dashboard" className={`transition-colors font-medium ${isDashboard ? 'text-reachout-blue' : 'text-reachout-darkgray hover:text-reachout-blue'}`}>
               Dashboard
             </Link>
-            <Link to="/features" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
-              Features
+            <Link to="/templates" className={`transition-colors font-medium ${isTemplates ? 'text-reachout-blue' : 'text-reachout-darkgray hover:text-reachout-blue'}`}>
+              Templates
             </Link>
             <Link to="/how-it-works" className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium">
               How It Works
@@ -121,11 +122,11 @@ const Header = () => {
                 Dashboard
               </Link>
               <Link
-                to="/features"
-                className="text-reachout-darkgray hover:text-reachout-blue transition-colors font-medium px-2 py-1"
+                to="/templates"
+                className={`transition-colors font-medium px-2 py-1 ${isTemplates ? 'text-reachout-blue' : 'text-reachout-darkgray hover:text-reachout-blue'}`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Features
+                Templates
               </Link>
               <Link
                 to="/how-it-works"

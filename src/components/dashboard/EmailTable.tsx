@@ -15,7 +15,6 @@ interface Email {
   id: number;
   recipient: string;
   email: string;
-  company: string;
   subject: string;
   date: string;
   status: string;
