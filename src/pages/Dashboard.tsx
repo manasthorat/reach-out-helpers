@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -115,7 +114,6 @@ const Dashboard = () => {
     endDate: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM-dd')
   });
 
-  // Check if we need to open campaign with template
   useEffect(() => {
     const shouldOpenWithTemplate = localStorage.getItem('openCampaignWithTemplate');
     if (shouldOpenWithTemplate === 'true') {
@@ -131,7 +129,6 @@ const Dashboard = () => {
             body: template.body
           });
           setIsNewCampaignOpen(true);
-          // Clear the flags
           localStorage.removeItem('openCampaignWithTemplate');
           localStorage.removeItem('campaignTemplate');
         } catch (e) {
@@ -141,7 +138,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Check if all steps are completed and hide onboarding if they are
   useEffect(() => {
     const allCompleted = steps.every(step => step.completed);
     if (allCompleted) {
@@ -251,7 +247,6 @@ const Dashboard = () => {
         endDate: new Date(newCampaign.endDate)
       }]);
 
-      // Update the create campaign step as completed
       setSteps(steps.map(step => 
         step.id === 3 ? {...step, completed: true} : step
       ));
@@ -304,7 +299,6 @@ const Dashboard = () => {
       if (c.id === id) {
         const newStatus = c.status === 'active' ? 'paused' : 'active';
         
-        // If activating first campaign, mark the last onboarding step as complete
         if (newStatus === 'active') {
           setSteps(steps.map(step => 
             step.id === 4 ? {...step, completed: true} : step
@@ -327,6 +321,19 @@ const Dashboard = () => {
 
   const completedSteps = steps.filter(step => step.completed).length;
   const progressPercentage = (completedSteps / steps.length) * 100;
+
+  const markResumeUploaded = () => {
+    const resumeUploaded = localStorage.getItem('resumeUploaded');
+    if (resumeUploaded === 'true') {
+      setSteps(steps.map(step => 
+        step.id === 2 ? {...step, completed: true} : step
+      ));
+    }
+  };
+
+  useEffect(() => {
+    markResumeUploaded();
+  }, []);
 
   return (
     <Layout>
