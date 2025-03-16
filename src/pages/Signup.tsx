@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { z } from 'zod';
 import Layout from '@/components/layout/Layout';
 import { Check } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const createAccountSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -32,6 +33,7 @@ const Signup = () => {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -53,8 +55,22 @@ const Signup = () => {
     try {
       const validatedData = createAccountSchema.parse(formData);
       
-      // Simulate API call for account creation
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create user account with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: validatedData.email,
+        password: validatedData.password,
+        options: {
+          data: {
+            full_name: validatedData.name,
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Setup onboarding steps as incomplete in localStorage
+      localStorage.setItem('onboardingStep', '1');
+      localStorage.setItem('accountCreated', 'true');
       
       // Successfully created account, show toast and redirect to profile setup
       toast({
@@ -75,6 +91,14 @@ const Signup = () => {
           }
         });
         setFormErrors(errors);
+      } else if ((error as any).message) {
+        // Handle Supabase authentication errors
+        toast({
+          title: "Error creating account",
+          description: (error as any).message,
+          variant: "destructive",
+          duration: 5000,
+        });
       } else {
         // Handle other errors
         toast({
@@ -89,24 +113,31 @@ const Signup = () => {
     }
   };
 
+  const steps = [
+    { number: 1, title: 'Account' },
+    { number: 2, title: 'Profile' },
+    { number: 3, title: 'Resume' },
+    { number: 4, title: 'Campaign' }
+  ];
+
   return (
     <Layout>
       <div className="container-custom py-12 md:py-20 max-w-xl">
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-reachout-darkgray">Create Your ReachOut Account</h1>
-            <p className="text-reachout-darkgray/70 mt-2">Step 1 of 6: Account Creation</p>
+            <p className="text-reachout-darkgray/70 mt-2">Step 1 of 4: Account Creation</p>
           </div>
 
           <div className="mb-6">
             <div className="flex justify-between mb-4">
-              {[1, 2, 3, 4, 5, 6].map((step) => (
-                <div key={step} className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 1 ? 'bg-reachout-blue text-white' : 'bg-gray-200 text-gray-400'}`}>
-                    {step === 1 ? <Check size={16} /> : step}
+              {steps.map((step) => (
+                <div key={step.number} className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step.number === 1 ? 'bg-reachout-blue text-white' : 'bg-gray-200 text-gray-400'}`}>
+                    {step.number === 1 ? <Check size={16} /> : step.number}
                   </div>
-                  <div className={`text-xs mt-1 ${step === 1 ? 'text-reachout-blue font-medium' : 'text-gray-400'}`}>
-                    Step {step}
+                  <div className={`text-xs mt-1 ${step.number === 1 ? 'text-reachout-blue font-medium' : 'text-gray-400'}`}>
+                    {step.title}
                   </div>
                 </div>
               ))}

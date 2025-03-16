@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +15,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { FileUp, X, File } from 'lucide-react';
+import { FileUp, X, File, Check } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSettings = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: 'John Doe',
     email: 'john.doe@example.com',
@@ -33,6 +36,48 @@ const ProfileSettings = () => {
   });
   
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        setUserId(data.session.user.id);
+        setFormData(prev => ({
+          ...prev,
+          fullName: data.session.user.user_metadata?.full_name || prev.fullName,
+          email: data.session.user.email || prev.email
+        }));
+      } else {
+        navigate('/login');
+      }
+    };
+    
+    // Check if we're in onboarding flow
+    const onboardingStep = localStorage.getItem('onboardingStep');
+    if (onboardingStep === '2') {
+      setIsOnboarding(true);
+      
+      // Load professional profile data if available
+      const profileData = localStorage.getItem('professionalProfile');
+      if (profileData) {
+        const profile = JSON.parse(profileData);
+        setFormData(prev => ({
+          ...prev,
+          jobTitle: profile.jobTitle || prev.jobTitle,
+          yearsOfExperience: profile.experience || prev.yearsOfExperience,
+          industry: profile.industry || prev.industry,
+          location: profile.location || prev.location,
+          noticePeriod: profile.noticePeriod || prev.noticePeriod,
+          salaryExpectation: `${profile.salaryMin} - ${profile.salaryMax}` || prev.salaryExpectation
+        }));
+      }
+    }
+    
+    checkSession();
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -64,22 +109,88 @@ const ProfileSettings = () => {
     setResumeFile(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Updated profile data:', formData);
-    console.log('Resume file:', resumeFile);
-    
-    // In a real app, you would send this data to your backend
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been successfully updated.",
-    });
+    setIsLoading(true);
+
+    try {
+      if (isOnboarding) {
+        // In onboarding flow, update localStorage to mark resume as uploaded
+        localStorage.setItem('resumeUploaded', 'true');
+        localStorage.setItem('onboardingStep', '3');
+        
+        // Show success toast
+        toast({
+          title: "Resume uploaded!",
+          description: "Let's continue with creating your first campaign.",
+          duration: 5000,
+        });
+        
+        // Navigate to dashboard to create first campaign (Step 4)
+        navigate('/dashboard');
+      } else {
+        // Regular profile update
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been successfully updated.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error updating profile",
+        description: "Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const steps = [
+    { number: 1, title: 'Account', completed: true },
+    { number: 2, title: 'Profile', completed: true },
+    { number: 3, title: 'Resume', completed: false },
+    { number: 4, title: 'Campaign', completed: false }
+  ];
 
   return (
     <Layout>
-      <div className="container-custom py-12">
-        <h1 className="text-3xl font-bold text-reachout-darkgray mb-8">Profile Settings</h1>
+      {isOnboarding && (
+        <div className="container-custom mt-8">
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h2 className="text-xl font-bold text-reachout-darkgray mb-4">Resume Upload</h2>
+            <p className="text-reachout-darkgray/70 mb-4">Step 3 of 4: Upload your resume for better targeting</p>
+            
+            <div className="mb-6">
+              <div className="flex justify-between mb-4">
+                {steps.map((step) => (
+                  <div key={step.number} className="flex flex-col items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      step.completed ? 'bg-reachout-blue text-white' : 
+                      step.number === 3 ? 'bg-reachout-blue text-white' : 
+                      'bg-gray-200 text-gray-400'
+                    }`}>
+                      {step.completed ? <Check size={16} /> : step.number}
+                    </div>
+                    <div className={`text-xs mt-1 ${
+                      step.number === 3 ? 'text-reachout-blue font-medium' : 
+                      step.number < 3 ? 'text-reachout-darkgray' : 
+                      'text-gray-400'
+                    }`}>
+                      {step.title}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="container-custom py-6">
+        {!isOnboarding && (
+          <h1 className="text-3xl font-bold text-reachout-darkgray mb-8">Profile Settings</h1>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
@@ -258,31 +369,48 @@ const ProfileSettings = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="about">About Me</Label>
-                    <Textarea 
-                      id="about" 
-                      name="about" 
-                      value={formData.about} 
-                      onChange={handleChange} 
-                      rows={4}
-                    />
-                  </div>
+                  {!isOnboarding && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="about">About Me</Label>
+                        <Textarea 
+                          id="about" 
+                          name="about" 
+                          value={formData.about} 
+                          onChange={handleChange} 
+                          rows={4}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="skills">Skills (comma separated)</Label>
+                        <Textarea 
+                          id="skills" 
+                          name="skills" 
+                          value={formData.skills} 
+                          onChange={handleChange} 
+                          rows={3}
+                        />
+                      </div>
+                    </>
+                  )}
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="skills">Skills (comma separated)</Label>
-                    <Textarea 
-                      id="skills" 
-                      name="skills" 
-                      value={formData.skills} 
-                      onChange={handleChange} 
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button type="submit" className="bg-reachout-blue hover:bg-reachout-darkblue">
-                      Save Changes
+                  <div className={isOnboarding ? "flex gap-3 justify-between" : "flex justify-end"}>
+                    {isOnboarding && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => navigate('/onboarding/profile')}
+                      >
+                        Back
+                      </Button>
+                    )}
+                    <Button 
+                      type="submit" 
+                      className="bg-reachout-blue hover:bg-reachout-darkblue"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Saving..." : isOnboarding ? "Continue" : "Save Changes"}
                     </Button>
                   </div>
                 </form>
@@ -290,43 +418,45 @@ const ProfileSettings = () => {
             </Card>
           </div>
           
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>Manage your account preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Password</h3>
-                  <Button variant="outline" className="w-full">Change Password</Button>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Email Notifications</h3>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded border-gray-300 text-reachout-blue focus:ring-reachout-blue" defaultChecked />
-                      <span>Recruiter responses</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded border-gray-300 text-reachout-blue focus:ring-reachout-blue" defaultChecked />
-                      <span>Weekly activity summary</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded border-gray-300 text-reachout-blue focus:ring-reachout-blue" defaultChecked />
-                      <span>Tips and recommendations</span>
-                    </label>
+          {!isOnboarding && (
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                  <CardDescription>Manage your account preferences</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-2">Password</h3>
+                    <Button variant="outline" className="w-full">Change Password</Button>
                   </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Account Management</h3>
-                  <Button variant="destructive" className="w-full">Delete Account</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  
+                  <div>
+                    <h3 className="font-semibold mb-2">Email Notifications</h3>
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded border-gray-300 text-reachout-blue focus:ring-reachout-blue" defaultChecked />
+                        <span>Recruiter responses</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded border-gray-300 text-reachout-blue focus:ring-reachout-blue" defaultChecked />
+                        <span>Weekly activity summary</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded border-gray-300 text-reachout-blue focus:ring-reachout-blue" defaultChecked />
+                        <span>Tips and recommendations</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold mb-2">Account Management</h3>
+                    <Button variant="destructive" className="w-full">Delete Account</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

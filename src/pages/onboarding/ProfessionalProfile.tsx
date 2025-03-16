@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { z } from 'zod';
 import Layout from '@/components/layout/Layout';
 import { Check } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const professionalProfileSchema = z.object({
   jobTitle: z.string().min(2, { message: "Job title is required" }),
@@ -36,6 +37,20 @@ const ProfessionalProfile = () => {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        setUserId(data.session.user.id);
+      } else {
+        navigate('/login');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -69,18 +84,24 @@ const ProfessionalProfile = () => {
     try {
       const validatedData = professionalProfileSchema.parse(formData);
       
-      // Simulate API call to save profile data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Save professional profile data to localStorage for now
+      // In a real app, you would save this to a database
+      localStorage.setItem('professionalProfile', JSON.stringify(validatedData));
+      localStorage.setItem('onboardingStep', '2');
       
       // Show success toast
       toast({
         title: "Profile saved!",
-        description: "Let's continue with your technical details.",
+        description: "Let's continue with your resume upload.",
         duration: 5000,
       });
       
-      // Navigate to the next step
-      navigate('/onboarding/technical');
+      // Navigate to the resume upload page (Step 3)
+      navigate('/profile-settings');
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Convert Zod errors to a more usable format
@@ -105,24 +126,39 @@ const ProfessionalProfile = () => {
     }
   };
 
+  const steps = [
+    { number: 1, title: 'Account', completed: true },
+    { number: 2, title: 'Profile', completed: false },
+    { number: 3, title: 'Resume', completed: false },
+    { number: 4, title: 'Campaign', completed: false }
+  ];
+
   return (
     <Layout>
       <div className="container-custom py-12 md:py-20 max-w-xl">
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-reachout-darkgray">Professional Profile</h1>
-            <p className="text-reachout-darkgray/70 mt-2">Step 2 of 6: Tell us about your professional background</p>
+            <p className="text-reachout-darkgray/70 mt-2">Step 2 of 4: Tell us about your professional background</p>
           </div>
 
           <div className="mb-6">
             <div className="flex justify-between mb-4">
-              {[1, 2, 3, 4, 5, 6].map((step) => (
-                <div key={step} className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step <= 2 ? 'bg-reachout-blue text-white' : 'bg-gray-200 text-gray-400'}`}>
-                    {step < 2 ? <Check size={16} /> : step}
+              {steps.map((step) => (
+                <div key={step.number} className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step.completed ? 'bg-reachout-blue text-white' : 
+                    step.number === 2 ? 'bg-reachout-blue text-white' : 
+                    'bg-gray-200 text-gray-400'
+                  }`}>
+                    {step.completed ? <Check size={16} /> : step.number}
                   </div>
-                  <div className={`text-xs mt-1 ${step === 2 ? 'text-reachout-blue font-medium' : step < 2 ? 'text-reachout-darkgray' : 'text-gray-400'}`}>
-                    Step {step}
+                  <div className={`text-xs mt-1 ${
+                    step.number === 2 ? 'text-reachout-blue font-medium' : 
+                    step.number < 2 ? 'text-reachout-darkgray' : 
+                    'text-gray-400'
+                  }`}>
+                    {step.title}
                   </div>
                 </div>
               ))}
