@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -60,20 +59,9 @@ const ProfileSettings = () => {
     if (onboardingStep === '2') {
       setIsOnboarding(true);
       
-      // Load professional profile data if available
-      const profileData = localStorage.getItem('professionalProfile');
-      if (profileData) {
-        const profile = JSON.parse(profileData);
-        setFormData(prev => ({
-          ...prev,
-          jobTitle: profile.jobTitle || prev.jobTitle,
-          yearsOfExperience: profile.experience || prev.yearsOfExperience,
-          industry: profile.industry || prev.industry,
-          location: profile.location || prev.location,
-          noticePeriod: profile.noticePeriod || prev.noticePeriod,
-          salaryExpectation: `${profile.salaryMin} - ${profile.salaryMax}` || prev.salaryExpectation
-        }));
-      }
+      // Redirect to the proper onboarding step
+      navigate('/onboarding/resume');
+      return;
     }
     
     checkSession();

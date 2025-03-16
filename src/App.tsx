@@ -14,6 +14,8 @@ import NotFound from "./pages/NotFound";
 import AuthGuard from "./components/auth/AuthGuard";
 import HowItWorks from "./pages/HowItWorks";
 import ProfileSettings from "./pages/ProfileSettings";
+import ResumeUpload from "./pages/onboarding/ResumeUpload";
+import CreateCampaign from "./pages/onboarding/CreateCampaign";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,8 @@ const App = () => (
             } 
           />
           <Route path="/onboarding/profile" element={<ProfessionalProfile />} />
+          <Route path="/onboarding/resume" element={<ResumeUpload />} />
+          <Route path="/onboarding/campaign" element={<CreateCampaign />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

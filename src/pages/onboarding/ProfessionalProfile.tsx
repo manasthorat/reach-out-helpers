@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -89,7 +88,6 @@ const ProfessionalProfile = () => {
       }
       
       // Save professional profile data to localStorage for now
-      // In a real app, you would save this to a database
       localStorage.setItem('professionalProfile', JSON.stringify(validatedData));
       localStorage.setItem('onboardingStep', '2');
       
@@ -101,7 +99,7 @@ const ProfessionalProfile = () => {
       });
       
       // Navigate to the resume upload page (Step 3)
-      navigate('/profile-settings');
+      navigate('/onboarding/resume');
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Convert Zod errors to a more usable format
